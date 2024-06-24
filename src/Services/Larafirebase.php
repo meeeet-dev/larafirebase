@@ -171,15 +171,9 @@ class Larafirebase
      */
     private function getBearerToken(): string
     {
-        $tenant = tenant();
         $cacheKey = 'LARAFIREBASE_AUTH_TOKEN';
-        if (!is_null($tenant->firebase_config) && !empty($tenant->firebase_config)) {
-            $firebaseCredentials = $tenant->firebase_config;
-            $cacheKey .= '_' . $tenant->id;
-        } else {
-            $firebaseCredentials = config('larafirebase.firebase_credentials');
-            $cacheKey .= '_CARDS';
-        }
+        $firebaseCredentials = config('larafirebase.firebase_credentials');
+        $cacheKey .= '_CARDS';
 
         $client = new Client();
         $client->setAuthConfig($firebaseCredentials);
@@ -233,12 +227,7 @@ class Larafirebase
      */
     private function callApi($fields): Response
     {
-        $tenant = tenant();
-        if (!is_null($tenant->firebase_project_id) && !empty($tenant->firebase_project_id)) {
-            $firebaseProjectId = $tenant->firebase_project_id;
-        } else {
-            $firebaseProjectId = config('larafirebase.project_id');
-        }
+        $firebaseProjectId = config('larafirebase.project_id');
 
         $apiURL = str_replace(':projectId', $firebaseProjectId, self::API_URI);
 
