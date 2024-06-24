@@ -11,23 +11,13 @@ use MeeeetDev\Larafirebase\Exceptions\UnsupportedTokenFormat;
 
 class Larafirebase
 {
-    const PRIORITY_NORMAL = 'normal';
-
     private $title;
 
     private $body;
 
-    private $clickAction;
-
     private $image;
 
-    private $icon;
-
     private $additionalData;
-
-    private $sound;
-
-    private $priority = self::PRIORITY_NORMAL;
 
     private $fromArray;
 
@@ -50,38 +40,10 @@ class Larafirebase
 
         return $this;
     }
-    
-    public function withClickAction($clickAction)
-    {
-        $this->clickAction = $clickAction;
-
-        return $this;
-    }
 
     public function withImage($image)
     {
         $this->image = $image;
-
-        return $this;
-    }
-
-    public function withIcon($icon)
-    {
-        $this->icon = $icon;
-
-        return $this;
-    }
-
-    public function withSound($sound)
-    {
-        $this->sound = $sound;
-
-        return $this;
-    }
-
-    public function withPriority($priority)
-    {
-        $this->priority = $priority;
 
         return $this;
     }
@@ -120,27 +82,29 @@ class Larafirebase
             return $this->callApi($this->fromRaw);
         }
 
-        $payload = [
-            'message' => [
-                'registration_ids' => $this->validateToken($tokens),
-                'notification' => [
-                    'title' => $this->title,
-                    'body' => $this->body,
-                    'image' => $this->image,
-                    'icon' => $this->icon,
-                    'sound' => $this->sound,
-                    'click_action' => $this->clickAction
-                ],
-                'data' => $this->additionalData,
-                'priority' => $this->priority
-            ],
-        ];
+        $devicetokens = $this->validateToken($tokens);
 
-        if($this->topic) {
-            $payload['message']['topic'] = $this->topic;
+        foreach ($devicetokens as $key => $token) {
+            $payload = [
+                'message' => [
+                    'token' => $token,
+                    'notification' => [
+                        'title' => $this->title,
+                        'body' => $this->body,
+                        'image' => $this->image
+                    ],
+                    'data' => $this->additionalData
+                ],
+            ];
+    
+            if($this->topic) {
+                $payload['message']['topic'] = $this->topic;
+            }
+
+            $this->callApi($payload);
         }
 
-        return $this->callApi($payload);
+        return true;
     }
 
     public function sendMessage($tokens)
@@ -249,5 +213,15 @@ class Larafirebase
         }
 
         throw new UnsupportedTokenFormat('Please pass tokens as array [token1, token2] or as string (use comma as separator if multiple passed).');
+    }
+
+    public function asNotification($tokens)
+    {
+        return $this->sendNotification($tokens);
+    }
+
+    public function asMessage($tokens)
+    {
+        return $this->sendMessage($tokens);
     }
 }

@@ -63,10 +63,6 @@ class MyController
         return Larafirebase::withTitle('Hello World')
             ->withBody('I have something new to share with you!')
             ->withImage('https://firebase.google.com/images/social.png')
-            ->withIcon('https://seeklogo.com/images/F/firebase-logo-402F407EE0-seeklogo.com.png')
-            ->withSound('default')
-            ->withClickAction('https://www.google.com')
-            ->withPriority('high')
             ->withAdditionalData([
                 'name' => 'wrench',
                 'mass' => '1.3kg',
@@ -154,14 +150,13 @@ Larafirebase::withTitle('Test Title')->withBody('Test body')->sendNotification('
 
 ```json
 {
-  "registration_ids": [
-    "token1"
-  ],
-  "notification": {
-    "title": "Test Title",
-    "body": "Test body"
+  "token": "token1",
+  "message" : {
+        "notification": {
+        "title": "Test Title",
+        "body": "Test body"
+    }
   },
-  "priority": "normal"
 }
 ```
 
@@ -173,12 +168,12 @@ Larafirebase::withTitle('Test Title')->withBody('Test body')->sendMessage('token
 
 ```json
 {
-  "registration_ids": [
-    "token1"
-  ],
-  "data": {
-    "title": "Test Title",
-    "body": "Test body"
+  "token": "token1",
+  "message" : {
+      "data": {
+        "title": "Test Title",
+        "body": "Test body"
+      }
   }
 }
 ```
@@ -187,7 +182,7 @@ If you want to create payload from scratch you can use method `fromRaw`, for exa
 
 ```php
 return Larafirebase::fromRaw([
-    'registration_ids' => ['token1', 'token2'],
+    'token' => 'token1',
     'data' => [
         'key_1' => 'Value 1',
         'key_2' => 'Value 2'

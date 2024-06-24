@@ -4,117 +4,45 @@ namespace MeeeetDev\Larafirebase\Messages;
 
 use MeeeetDev\Larafirebase\Facades\Larafirebase;
 
-class FirebaseMessage
+class FirebaseMessage extends Larafirebase
 {
-    const PRIORITY_NORMAL = 'normal';
-
-    private $title;
-
-    private $body;
-
-    private $clickAction;
-
-    private $image;
-
-    private $icon;
-
-    private $sound;
-
-    private $additionalData;
-
-    private $priority = self::PRIORITY_NORMAL;
-
-    private $fromArray;
-
     public function withTitle($title)
     {
-        $this->title = $title;
-
-        return $this;
+        return parent::withTitle($title);
     }
 
     public function withBody($body)
     {
-        $this->body = $body;
-
-        return $this;
-    }
-
-    public function withClickAction($clickAction)
-    {
-        $this->clickAction = $clickAction;
-
-        return $this;
+        return parent::withBody($body);
     }
 
     public function withImage($image)
     {
-        $this->image = $image;
-
-        return $this;
-    }
-
-    public function withIcon($icon)
-    {
-        $this->icon = $icon;
-
-        return $this;
-    }
-
-    public function withSound($sound)
-    {
-        $this->sound = $sound;
-
-        return $this;
+        return parent::withImage($image);
     }
 
     public function withAdditionalData($additionalData)
     {
-        $this->additionalData = $additionalData;
-
-        return $this;
+        return parent::withAdditionalData($additionalData);
     }
 
-    public function withPriority($priority)
+    public function withTopic($topic)
     {
-        $this->priority = $priority;
-
-        return $this;
+        return parent::withTopic($topic);
     }
 
     public function fromArray($fromArray)
     {
-        $this->fromArray = $fromArray;
-
-        return $this;
+        return parent::fromArray($fromArray);
     }
 
-    public function asNotification($deviceTokens)
+    public function fromRaw($fromRaw)
     {
-        if ($this->fromArray) {
-            return Larafirebase::fromArray($this->fromArray)->sendNotification($deviceTokens);
-        }
-
-        return Larafirebase::withTitle($this->title)
-            ->withBody($this->body)
-            ->withClickAction($this->clickAction)
-            ->withImage($this->image)
-            ->withIcon($this->icon)
-            ->withSound($this->sound)
-            ->withPriority($this->priority)
-            ->withAdditionalData($this->additionalData)
-            ->sendNotification($deviceTokens);
+        return parent::fromRaw($fromRaw);
     }
 
-    public function asMessage($deviceTokens)
+    public function asNotification($tokens)
     {
-        if ($this->fromArray) {
-            return Larafirebase::fromArray($this->fromArray)->sendMessage($deviceTokens);
-        }
-
-        return Larafirebase::withTitle($this->title)
-            ->withBody($this->body)
-            ->withAdditionalData($this->additionalData)
-            ->sendMessage($deviceTokens);
+        return parent::sendNotification($tokens);
     }
 }
