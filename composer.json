@@ -1,0 +1,46 @@
+{
+    "name": "meeeet-dev/larafirebase",
+    "description": "Laravel Firebase Cloud Messaging (Larafirebase) with HTTP v1.",
+    "keywords": [
+        "meeeet-dev",
+        "larafirebase",
+        "laravel",
+        "firebase",
+        "messaging",
+        "push notification",
+        "cloud messaging"
+    ],
+    "homepage": "https://github.com/meeeet-dev/larafirebase",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Meeeet Dev",
+            "email": "meeeet.dev@gmail.com"
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "MeeeetDev\\Larafirebase\\": "src/"
+        },
+        "files" : [
+            "src/Helpers/All.php"
+        ]
+    },
+    "require": {
+        "illuminate/support": "^7.0|^8.0|^9.0|^10.0|^11.0",
+        "illuminate/notifications": "^7.0|^8.0|^9.0|^10.0|^11.0",
+        "google/apiclient": "^2.12"
+    },
+    "config": {
+        "sort-packages": true
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true,
+    "extra": {
+        "laravel": {
+            "providers": [
+                "MeeeetDev\\Larafirebase\\Providers\\LarafirebaseServiceProvider"
+            ]
+        }
+    }
+}
