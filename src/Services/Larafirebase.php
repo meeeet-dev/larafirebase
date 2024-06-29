@@ -125,8 +125,10 @@ class Larafirebase
 
             $res = $this->callApi($payload);
 
-            if ($res->getStatusCode() != 200) {
-                throw new BadRequestFormat('Failed to send notification, status code: ' . $res->getStatusCode());
+            if ($res->getStatusCode() == 404) {
+                // Requested entity was not found, Ignore error
+            } else if ($res->getStatusCode() != 200) {
+                throw new BadRequestFormat('Failed to send notification. status code: ' . $res->getStatusCode());
             }
         }
 
