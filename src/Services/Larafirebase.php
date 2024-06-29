@@ -84,6 +84,24 @@ class Larafirebase
 
         $devicetokens = $this->validateToken($tokens);
 
+        if (count($devicetokens) == 0) {
+            return true;
+        }
+
+        $additionalData = $this->additionalData;
+        if (is_array($additionalData)) {
+            $data = collect($additionalData)->map(function ($item, $key) {
+                // Convert each item to string
+                if (is_array($item)) {
+                    return array_map('strval', $item); // Convert all array values to strings
+                } else {
+                    return strval($item); // Convert scalar value to string
+                }
+            })->toArray();
+        } else {
+            $data = $additionalData;
+        }
+
         foreach ($devicetokens as $key => $token) {
             $payload = [
                 'message' => [
@@ -91,17 +109,24 @@ class Larafirebase
                     'notification' => [
                         'title' => $this->title,
                         'body' => $this->body,
-                        'image' => $this->image
                     ],
-                    'data' => $this->additionalData
+                    'data' => $data,
                 ],
             ];
-    
+
+            if ($this->image) {
+                $payload['message']['notification']['image'] = $this->image;
+            }
+
             if($this->topic) {
                 $payload['message']['topic'] = $this->topic;
             }
 
-            $this->callApi($payload);
+            $res = $this->callApi($payload);
+
+            if ($res->getStatusCode() != 200) {
+                return false;
+            }
         }
 
         return true;
@@ -109,19 +134,7 @@ class Larafirebase
 
     public function sendMessage($tokens)
     {
-        $data = ($this->fromArray) ? $this->fromArray : [
-            'title' => $this->title,
-            'body' => $this->body,
-        ];
-
-        $data = $this->additionalData ? array_merge($data, $this->additionalData) : $data;
-
-        $fields = array(
-            'registration_ids' => $this->validateToken($tokens),
-            'data' => $data,
-        );
-
-        return $this->callApi($fields);
+        return $this->sendNotification($tokens);
     }
 
     public function send()

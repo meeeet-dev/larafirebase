@@ -45,4 +45,9 @@ class FirebaseMessage extends Larafirebase
     {
         return parent::sendNotification($tokens);
     }
+
+    public function asMessage($tokens)
+    {
+        return parent::sendMessage($tokens);
+    }
 }
