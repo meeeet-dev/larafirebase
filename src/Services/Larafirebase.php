@@ -7,6 +7,7 @@ use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Cache;
 use Google\Service\FirebaseCloudMessaging;
+use MeeeetDev\Larafirebase\Exceptions\BadRequestFormat;
 use MeeeetDev\Larafirebase\Exceptions\UnsupportedTokenFormat;
 
 class Larafirebase
@@ -125,7 +126,7 @@ class Larafirebase
             $res = $this->callApi($payload);
 
             if ($res->getStatusCode() != 200) {
-                return false;
+                throw new BadRequestFormat('Failed to send notification, status code: ' . $res->getStatusCode());
             }
         }
 
