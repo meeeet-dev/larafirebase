@@ -94,7 +94,7 @@ class Larafirebase
             $data = collect($additionalData)->map(function ($item, $key) {
                 // Convert each item to string
                 if (is_array($item)) {
-                    return array_map('strval', $item); // Convert all array values to strings
+                    return json_encode($item); // Convert all array values to strings
                 } else {
                     return strval($item); // Convert scalar value to string
                 }
