@@ -100,7 +100,139 @@ class MyController
 }
 ```
 
-Example usage in **Notification** class:
+### Using the HasFirebaseNotification Trait
+
+The package provides a reusable `HasFirebaseNotification` trait that simplifies implementing Firebase notifications. This is the **recommended approach** for most use cases.
+
+#### Available Customization Fields
+
+The trait supports all Firebase message fields. You can customize by setting properties or overriding methods:
+
+| Field | Property | Method Override | Description |
+|-------|----------|----------------|-------------|
+| **Title** | `$title` | `getFirebaseTitle()` | Notification title |
+| **Body** | `$body` | `getFirebaseBody()` | Notification body text |
+| **Image** | `$image` | `getFirebaseImage()` | Image URL for rich notifications |
+| **Data** | `$data` | `getFirebaseData()` | Additional custom data payload |
+| **Topic** | `$topic` | `getFirebaseTopic()` | Topic name for topic-based messaging |
+| **Tokens** | `$tokens` | `getFirebaseTokens()` | Device tokens (auto-detected from user) |
+| **Delivery Method** | `$deliveryMethod` | `getFirebaseDeliveryMethod()` | `'notification'` or `'message'` |
+| **Raw Payload** | `$raw` | `getFirebaseRaw()` | Complete custom payload (overrides all) |
+| **Array Payload** | `$fromArray` | `getFirebaseArray()` | Array-based payload construction |
+
+---
+
+#### Option 1: Basic Usage (Simple & Quick)
+
+Perfect for straightforward notifications with static or simple dynamic content.
+
+```php
+use Illuminate\Notifications\Notification;
+use MeeeetDev\Larafirebase\Traits\HasFirebaseNotification;
+
+class OrderConfirmed extends Notification
+{
+    use HasFirebaseNotification;
+
+    public $title = 'Order Confirmed';
+    public $body;
+    public $image;
+    public $data;
+
+    public function __construct($orderNumber)
+    {
+        $this->body = "Your order #{$orderNumber} has been confirmed!";
+        $this->data = ['order_number' => $orderNumber];
+    }
+
+    public function via($notifiable)
+    {
+        return ['firebase'];
+    }
+}
+```
+
+**Usage:**
+```php
+$user->notify(new OrderConfirmed('12345'));
+```
+
+---
+
+#### Option 2: Advanced Usage (Custom Logic)
+
+Override trait methods for complete control over notification content and behavior.
+
+```php
+use Illuminate\Notifications\Notification;
+use MeeeetDev\Larafirebase\Traits\HasFirebaseNotification;
+
+class WelcomeNotification extends Notification
+{
+    use HasFirebaseNotification;
+
+    private $user;
+    private $referralCode;
+
+    public function __construct($user, $referralCode = null)
+    {
+        $this->user = $user;
+        $this->referralCode = $referralCode;
+    }
+
+    public function via($notifiable)
+    {
+        return ['firebase'];
+    }
+
+    protected function getFirebaseTitle($notifiable): string
+    {
+        return "Welcome, {$this->user->name}! 🎉";
+    }
+
+    protected function getFirebaseBody($notifiable): string
+    {
+        return $this->referralCode 
+            ? "Thanks for joining via referral code: {$this->referralCode}"
+            : "We're excited to have you on board!";
+    }
+
+    protected function getFirebaseImage($notifiable): ?string
+    {
+        return 'https://example.com/welcome-banner.png';
+    }
+
+    protected function getFirebaseData($notifiable): ?array
+    {
+        return [
+            'user_id' => $this->user->id,
+            'referral_code' => $this->referralCode,
+            'action' => 'open_profile',
+            'timestamp' => now()->toIso8601String()
+        ];
+    }
+
+    protected function getFirebaseTokens($notifiable)
+    {
+        // Get all active device tokens
+        return $notifiable->deviceTokens()
+            ->where('is_active', true)
+            ->pluck('token')
+            ->toArray();
+    }
+}
+```
+
+**Usage:**
+```php
+$user->notify(new WelcomeNotification($user, 'REF123'));
+```
+
+---
+
+#### Option 3: Manual Implementation (Without Trait)
+
+Implement the `toFirebase` method directly if you prefer full manual control.
 
 ```php
 use Illuminate\Notifications\Notification;
@@ -130,6 +262,57 @@ class SendBirthdayReminder extends Notification
             ->withTitle('Hey, ', $notifiable->first_name)
             ->withBody('Happy Birthday!')
             ->asNotification($deviceTokens); // OR ->asMessage($deviceTokens);
+    }
+}
+```
+
+### Troubleshooting
+
+#### ❌ Error: "The notification is missing a toFirebase method"
+
+**Problem:** Your notification class doesn't have a `toFirebase()` method.
+
+**Solution 1 - Use the Trait (Recommended):**
+
+```php
+use Illuminate\Notifications\Notification;
+use MeeeetDev\Larafirebase\Traits\HasFirebaseNotification;
+
+class YourNotification extends Notification
+{
+    use HasFirebaseNotification;
+
+    public $title = 'Hello';
+    public $body = 'Your message here';
+
+    public function via($notifiable)
+    {
+        return ['firebase'];
+    }
+}
+```
+
+**Solution 2 - Implement Manually:**
+
+```php
+use Illuminate\Notifications\Notification;
+use MeeeetDev\Larafirebase\Messages\FirebaseMessage;
+
+class YourNotification extends Notification
+{
+    public function via($notifiable)
+    {
+        return ['firebase'];
+    }
+
+    public function toFirebase($notifiable)
+    {
+        $tokens = $notifiable->fcm_token;
+
+        return (new FirebaseMessage)
+            ->withTitle('Notification Title')
+            ->withBody('Notification body text')
+            ->asNotification($tokens);
     }
 }
 ```
@@ -201,4 +384,4 @@ return Larafirebase::fromRaw([
 ---
 
 
-<sup>Made with ♥ by Meeeet Dev ([@meeeet-dev](https://github.com/meeeet-dev)).</sup>
+<sup>Made with ♥ by Meet Bhanabhagwan ([@meeeet-dev](https://github.com/meeeet-dev)).</sup>
