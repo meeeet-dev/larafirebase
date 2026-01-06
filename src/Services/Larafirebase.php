@@ -103,6 +103,33 @@ class Larafirebase
             $data = $additionalData;
         }
 
+        if ($this->topic) {
+            $payload = [
+                'message' => [
+                    'topic' => $this->topic,
+                    'notification' => [
+                        'title' => $this->title,
+                        'body' => $this->body,
+                    ],
+                    'data' => $data,
+                ],
+            ];
+
+            if ($this->image) {
+                $payload['message']['notification']['image'] = $this->image;
+            }
+
+            $res = $this->callApi($payload);
+
+            if ($res->getStatusCode() == 404) {
+                // Requested entity was not found, Ignore error
+            } else if ($res->getStatusCode() != 200) {
+                throw new BadRequestFormat('Failed to send notification. status code: ' . $res->getStatusCode());
+            }
+
+            return true;
+        }
+
         foreach ($devicetokens as $key => $token) {
             $payload = [
                 'message' => [
