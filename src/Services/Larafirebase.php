@@ -5,10 +5,12 @@ namespace MeeeetDev\Larafirebase\Services;
 use Google\Client;
 use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Cache;
 use Google\Service\FirebaseCloudMessaging;
 use MeeeetDev\Larafirebase\Exceptions\BadRequestFormat;
 use MeeeetDev\Larafirebase\Exceptions\UnsupportedTokenFormat;
+use MeeeetDev\Larafirebase\Config\AndroidConfig;
+use MeeeetDev\Larafirebase\Config\ApnsConfig;
+use MeeeetDev\Larafirebase\Config\WebpushConfig;
 
 class Larafirebase
 {
@@ -25,6 +27,16 @@ class Larafirebase
     private $topic;
 
     private $fromRaw;
+
+    private $androidConfig;
+
+    private $apnsConfig;
+
+    private $webpushConfig;
+
+    private $analyticsLabel;
+
+    private $condition;
 
     public const API_URI = 'https://fcm.googleapis.com/v1/projects/:projectId/messages:send';
 
@@ -77,6 +89,41 @@ class Larafirebase
         return $this;
     }
 
+    public function withAndroidConfig(AndroidConfig $config)
+    {
+        $this->androidConfig = $config;
+
+        return $this;
+    }
+
+    public function withApnsConfig(ApnsConfig $config)
+    {
+        $this->apnsConfig = $config;
+
+        return $this;
+    }
+
+    public function withWebpushConfig(WebpushConfig $config)
+    {
+        $this->webpushConfig = $config;
+
+        return $this;
+    }
+
+    public function withAnalyticsLabel($label)
+    {
+        $this->analyticsLabel = $label;
+
+        return $this;
+    }
+
+    public function withCondition($condition)
+    {
+        $this->condition = $condition;
+
+        return $this;
+    }
+
     public function sendNotification($tokens)
     {
         if($this->fromRaw) {
@@ -119,6 +166,40 @@ class Larafirebase
                 $payload['message']['notification']['image'] = $this->image;
             }
 
+            // Add platform-specific configurations
+            $this->addPlatformConfigs($payload['message']);
+
+            $res = $this->callApi($payload);
+
+            if ($res->getStatusCode() == 404) {
+                // Requested entity was not found, Ignore error
+            } else if ($res->getStatusCode() != 200) {
+                throw new BadRequestFormat('Failed to send notification. status code: ' . $res->getStatusCode());
+            }
+
+            return true;
+        }
+
+        // Handle condition-based targeting
+        if ($this->condition) {
+            $payload = [
+                'message' => [
+                    'condition' => $this->condition,
+                    'notification' => [
+                        'title' => $this->title,
+                        'body' => $this->body,
+                    ],
+                    'data' => $data,
+                ],
+            ];
+
+            if ($this->image) {
+                $payload['message']['notification']['image'] = $this->image;
+            }
+
+            // Add platform-specific configurations
+            $this->addPlatformConfigs($payload['message']);
+
             $res = $this->callApi($payload);
 
             if ($res->getStatusCode() == 404) {
@@ -150,6 +231,9 @@ class Larafirebase
                 $payload['message']['topic'] = $this->topic;
             }
 
+            // Add platform-specific configurations
+            $this->addPlatformConfigs($payload['message']);
+
             $res = $this->callApi($payload);
 
             if ($res->getStatusCode() == 404) {
@@ -160,6 +244,28 @@ class Larafirebase
         }
 
         return true;
+    }
+
+    /**
+     * Add platform-specific configurations to the message payload
+     */
+    private function addPlatformConfigs(array &$message)
+    {
+        if ($this->androidConfig !== null) {
+            $message['android'] = $this->androidConfig->toArray();
+        }
+
+        if ($this->apnsConfig !== null) {
+            $message['apns'] = $this->apnsConfig->toArray();
+        }
+
+        if ($this->webpushConfig !== null) {
+            $message['webpush'] = $this->webpushConfig->toArray();
+        }
+
+        if ($this->analyticsLabel !== null) {
+            $message['fcm_options'] = ['analytics_label' => $this->analyticsLabel];
+        }
     }
 
     public function sendMessage($tokens)

@@ -57,6 +57,27 @@ trait HasFirebaseNotification
             $message->withTopic($topic);
         }
 
+        // Add platform-specific configurations
+        if ($androidConfig = $this->getAndroidConfig($notifiable)) {
+            $message->withAndroidConfig($androidConfig);
+        }
+
+        if ($apnsConfig = $this->getApnsConfig($notifiable)) {
+            $message->withApnsConfig($apnsConfig);
+        }
+
+        if ($webpushConfig = $this->getWebpushConfig($notifiable)) {
+            $message->withWebpushConfig($webpushConfig);
+        }
+
+        if ($analyticsLabel = $this->getAnalyticsLabel($notifiable)) {
+            $message->withAnalyticsLabel($analyticsLabel);
+        }
+
+        if ($condition = $this->getCondition($notifiable)) {
+            $message->withCondition($condition);
+        }
+
         // Get tokens
         $tokens = $this->getFirebaseTokens($notifiable);
 
@@ -167,6 +188,67 @@ trait HasFirebaseNotification
     protected function getFirebaseDeliveryMethod($notifiable): string
     {
         return property_exists($this, 'deliveryMethod') ? $this->deliveryMethod : 'notification';
+    }
+
+    /**
+     * Get Android-specific configuration.
+     * Override this method to provide Android platform customization.
+     *
+     * @param mixed $notifiable
+     * @return \MeeeetDev\Larafirebase\Config\AndroidConfig|null
+     */
+    protected function getAndroidConfig($notifiable): ?\MeeeetDev\Larafirebase\Config\AndroidConfig
+    {
+        return property_exists($this, 'androidConfig') ? $this->androidConfig : null;
+    }
+
+    /**
+     * Get APNS-specific configuration.
+     * Override this method to provide iOS platform customization.
+     *
+     * @param mixed $notifiable
+     * @return \MeeeetDev\Larafirebase\Config\ApnsConfig|null
+     */
+    protected function getApnsConfig($notifiable): ?\MeeeetDev\Larafirebase\Config\ApnsConfig
+    {
+        return property_exists($this, 'apnsConfig') ? $this->apnsConfig : null;
+    }
+
+    /**
+     * Get Webpush-specific configuration.
+     * Override this method to provide Web platform customization.
+     *
+     * @param mixed $notifiable
+     * @return \MeeeetDev\Larafirebase\Config\WebpushConfig|null
+     */
+    protected function getWebpushConfig($notifiable): ?\MeeeetDev\Larafirebase\Config\WebpushConfig
+    {
+        return property_exists($this, 'webpushConfig') ? $this->webpushConfig : null;
+    }
+
+    /**
+     * Get analytics label for tracking.
+     * Override this method to add analytics tracking.
+     *
+     * @param mixed $notifiable
+     * @return string|null
+     */
+    protected function getAnalyticsLabel($notifiable): ?string
+    {
+        return property_exists($this, 'analyticsLabel') ? $this->analyticsLabel : null;
+    }
+
+    /**
+     * Get condition for conditional targeting.
+     * Override this method to send to devices matching specific conditions.
+     * Example: "'TopicA' in topics && 'TopicB' in topics"
+     *
+     * @param mixed $notifiable
+     * @return string|null
+     */
+    protected function getCondition($notifiable): ?string
+    {
+        return property_exists($this, 'condition') ? $this->condition : null;
     }
 
     /**
